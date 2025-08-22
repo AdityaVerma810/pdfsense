@@ -109,3 +109,4 @@ You can add any number of PDFs to the input/ folder, and the script will process
 
 Docker Workflow
 If you want to run this tool without worrying about your environment, Docker makes it easy. With the provided Docker configuration, you can build the container, run it, and process any PDFs by simply adding them to the input/ folder.# pdfsense
+# pdfsense
