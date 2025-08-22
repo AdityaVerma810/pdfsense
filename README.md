@@ -1,4 +1,4 @@
-# Adobe Hackathon Round 1A - PDF Heading Extractor
+# PDFsense - PDF Heading Extractor
 
 ## Steps to Run Locally
 
@@ -18,7 +18,7 @@ A Python tool to extract headings from multilingual PDFs and output them as stru
 
 Folder Structure
 
-adobe_pdf_parser/
+PDFsense/
 ├── Dockerfile               # Docker configuration
 ├── main.py                  # Python script to process PDF and extract outline
 ├── requirements.txt         # Dependencies for the project
