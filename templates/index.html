@@ -103,7 +103,8 @@
           return `
             <div class="card">
               <h3>${item.input}</h3>
-              <p>Generated output: <a href="/output/${item.output}" target="_blank">${item.output}</a></p>
+              <p>Generated output file: ${item.output}</p>
+              <pre>${JSON.stringify(item.json, null, 2)}</pre>
             </div>
           `;
         }).join('');

@@ -68,7 +68,7 @@ def process_pdf_file(pdf_path, filename):
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=4)
 
-    return output_filename
+    return output_filename, result
 
 
 @app.route("/")
@@ -96,8 +96,12 @@ def process_files():
         filename = secure_filename(file.filename)
         pdf_path = os.path.join(INPUT_DIR, filename)
         file.save(pdf_path)
-        output_filename = process_pdf_file(pdf_path, filename)
-        outputs.append({"input": filename, "output": output_filename})
+        output_filename, result = process_pdf_file(pdf_path, filename)
+        outputs.append({
+            "input": filename,
+            "output": output_filename,
+            "json": result,
+        })
 
     return jsonify({
         "success": True,
