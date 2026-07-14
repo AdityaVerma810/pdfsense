@@ -7,14 +7,12 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_DIR = os.path.join(BASE_DIR, "input")
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
-os.makedirs(INPUT_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
-def extract_headings_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
+def extract_headings_from_pdf_bytes(pdf_bytes):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     outline = []
     combined_title = []
     fallback_title = None
@@ -60,13 +58,16 @@ def extract_headings_from_pdf(pdf_path):
     }
 
 
-def process_pdf_file(pdf_path, filename):
-    result = extract_headings_from_pdf(pdf_path)
+def process_pdf_file(pdf_bytes, filename):
+    result = extract_headings_from_pdf_bytes(pdf_bytes)
     output_filename = f"output_{os.path.splitext(filename)[0]}.json"
     output_path = os.path.join(OUTPUT_DIR, output_filename)
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False, indent=4)
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, ensure_ascii=False, indent=4)
+    except Exception:
+        pass
 
     return output_filename, result
 
@@ -94,9 +95,8 @@ def process_files():
             return jsonify({"success": False, "message": "Only PDF files are supported."}), 400
 
         filename = secure_filename(file.filename)
-        pdf_path = os.path.join(INPUT_DIR, filename)
-        file.save(pdf_path)
-        output_filename, result = process_pdf_file(pdf_path, filename)
+        pdf_bytes = file.read()
+        output_filename, result = process_pdf_file(pdf_bytes, filename)
         outputs.append({
             "input": filename,
             "output": output_filename,
