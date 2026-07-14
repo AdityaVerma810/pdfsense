@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDFSense UI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div class="hero">
+        <h1>PDFSense</h1>
+        <p>Upload one or more PDFs and generate structured heading JSON output in seconds.</p>
+      </div>
+
+      <form id="upload-form" enctype="multipart/form-data">
+        <label class="dropzone" for="pdf-files">
+          <input id="pdf-files" name="files" type="file" accept="application/pdf" multiple />
+          <span id="dropzone-text">Click to browse or drag PDF files here</span>
+        </label>
+
+        <ul id="file-list" class="file-list"></ul>
+
+        <button type="submit" class="btn">Generate Output</button>
+      </form>
+
+      <div id="status" class="status" aria-live="polite"></div>
+      <div id="results" class="results"></div>
+    </div>
+
+    <script>
+      const form = document.getElementById('upload-form');
+      const fileInput = document.getElementById('pdf-files');
+      const fileList = document.getElementById('file-list');
+      const status = document.getElementById('status');
+      const results = document.getElementById('results');
+      const dropzone = document.querySelector('.dropzone');
+
+      function renderSelectedFiles() {
+        const files = Array.from(fileInput.files || []);
+        fileList.innerHTML = '';
+
+        if (!files.length) {
+          fileList.innerHTML = '<li class="empty">No PDFs selected yet.</li>';
+          return;
+        }
+
+        files.forEach((file) => {
+          const item = document.createElement('li');
+          item.textContent = file.name;
+          fileList.appendChild(item);
+        });
+      }
+
+      fileInput.addEventListener('change', renderSelectedFiles);
+
+      ['dragenter', 'dragover'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropzone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach((eventName) => {
+        dropzone.addEventListener(eventName, (event) => {
+          event.preventDefault();
+          dropzone.classList.remove('dragover');
+        });
+      });
+
+      dropzone.addEventListener('drop', (event) => {
+        const droppedFiles = event.dataTransfer.files;
+        if (droppedFiles.length) {
+          fileInput.files = droppedFiles;
+          renderSelectedFiles();
+        }
+      });
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        status.textContent = 'Generating JSON outputs...';
+        status.className = 'status loading';
+        results.innerHTML = '';
+
+        const formData = new FormData(form);
+        const response = await fetch('/api/process', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          status.textContent = data.message || 'Something went wrong.';
+          status.className = 'status error';
+          return;
+        }
+
+        status.textContent = data.message;
+        status.className = 'status success';
+
+        const cards = data.outputs.map((item) => {
+          return `
+            <div class="card">
+              <h3>${item.input}</h3>
+              <p>Generated output: <a href="/output/${item.output}" target="_blank">${item.output}</a></p>
+            </div>
+          `;
+        }).join('');
+
+        results.innerHTML = cards;
+      });
+    </script>
+  </body>
+</html>
